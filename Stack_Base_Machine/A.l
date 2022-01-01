@@ -5,7 +5,7 @@
 %%
 ^"load " { BEGIN DEF; }
 <DEF>[0-9]+	{ 
-			yylval.ival = atoi(yytext);
+			yylval = atoi(yytext);
 			return INTEGER; 
 		}
 <DEF>\n	{ BEGIN INITIAL; }

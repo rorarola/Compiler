@@ -5,14 +5,10 @@ void yyerror(const char *message);
 void push(int);
 void pop();
 int top();
-int isempty();
 void opr(int);
 void opr2(int);
 %}
-%union{
-	int ival;
-};
-%token <ival> INTEGER
+%token INTEGER
 %token add sub mul mod inc dec 
 %%
 stmt	: expr stmt
@@ -36,7 +32,7 @@ void yyerror(const char * message)
 int stack[SIZE];
 int tot = -1;
 void push(int x) {
-	if(tot + 1 == SIZE) printf("\nOverflow!!\n");
+	if(tot + 1 == SIZE) printf("\nOverflow!!\n"); // 
 	else stack[++tot] = x;
 }
 
@@ -45,17 +41,11 @@ void pop() {
 	else tot--;
 }
 
-int top() {
-	return stack[tot];	
-}
-
-int isempty() {
-	return (tot == -1);
-}
+int top() { return stack[tot]; }
 
 int ok = 1;
 
-void opr(int opr) { // binary operator
+void opr(int opr) { // binary operator(+,-,*,/)
 	if(tot < 1) { ok = 0; return; }
 	int a = top(); pop(); 
 	int b = top(); pop();
@@ -69,7 +59,7 @@ void opr(int opr) { // binary operator
 	push(a);
 }
 
-void opr2(int opr) {
+void opr2(int opr) { // ++, --
 	if(tot == -1) { ok = 0; return; }
 	int a = top(); pop();
 	if(opr == 1) a++;

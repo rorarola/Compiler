@@ -1,0 +1,5 @@
+print-num (- 2 1)
+print-num (+ 2 1)
+print-num (* 2 3 4)
+print-num (/ 10 5)
+print-num ( mod 8 5)

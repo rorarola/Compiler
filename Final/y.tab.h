@@ -49,21 +49,34 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
+    bool_val = 258,
     and = 259,
     or = 260,
-    mod = 261,
-    not = 262,
-    id = 263,
-    number = 266,
-    define = 267,
-    fun = 268,
-    _if = 269
+    not = 261,
+    number = 262,
+    define = 263,
+    fun = 264,
+    _if = 265,
+    id = 266,
+    print_num = 267,
+    print_bool = 268,
+    mod = 269
   };
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 7 "A.y"
+
+	int integer;
+	char* string;
+
+#line 77 "y.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

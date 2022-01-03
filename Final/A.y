@@ -3,17 +3,32 @@
 #include <stdlib.h>
 #include<string.h>
 void yyerror(const char *message);
+int num_same = 1, bool_and = 1, bool_or = 0;
+int id_size = 0;
 %}
+%code requires {
+	typedef struct Data {
+		int type; // 0: number, 1: boolean, 2: function
+		int val;
+	} Data;
+	typedef struct ID {
+		char id[500];
+		Data data;
+	} ID;
+	ID ids[105];
+}
 %union {
 	int integer;
-	char* string;
+	char string[500];
+	struct Data data; 
 }
-%token <integer> bool_val and or not number define fun _if
+%token <integer> bool_val and or not number fun _if
 %token <string> id;
-%token print_num print_bool mod
+%token print_num print_bool mod define
 %left '+' '-'
 %left '*'
-%type <integer> EXP NUM-OP PLUS PLUS-EXPS MINUS MULTIPLY MULTI-EXPS DIVIDE MODULUS GREATER SMALLER EQUAL
+%type <string> VARIABLE
+%type <integer> EXP NUM-OP PLUS PLUS-EXPS MINUS MULTIPLY MULTI-EXPS DIVIDE MODULUS GREATER SMALLER EQUAL EQUAL-EXPS LOGICAL-OP AND-OP AND-EXPS OR-OP OR-EXPS NOT-OP IF-EXP TEST-EXP THEN-EXP ELSE-EXP 
 %%
 PROGRAM	: STMT PROGRAM
 	|
@@ -30,21 +45,21 @@ PRINT-STMT	: print_num EXP		{ printf("%d\n", $2); }
 		;
 EXP	: bool_val
 	| number	{ fprintf(stderr, "[number=%d]\n", $1); }
-	| VARIABLE
+	| VARIABLE	{ for(int i = 0; i < id_size; i++) if(strcmp(ids[i].id, $1) == 0) $$ = ids[i].data.val; }
 	| NUM-OP	{ $$ = $1; }
-	| LOGICAL-OP
+	| LOGICAL-OP	{ $$ = $1; }
 	| FUN-EXP
 	| FUN-CALL
-	| IF-EXP
+	| IF-EXP	{ $$ = $1; }
 	;
 NUM-OP	: PLUS		{ $$ = $1; }
 	| MINUS		{ $$ = $1; }
 	| MULTIPLY	{ $$ = $1; }
 	| DIVIDE	{ $$ = $1; }
 	| MODULUS	{ $$ = $1; }
-	| GREATER
-	| SMALLER
-	| EQUAL
+	| GREATER	{ $$ = $1; }
+	| SMALLER	{ $$ = $1; }
+	| EQUAL		{ $$ = $1; }
 	;
 PLUS	: '(' '+' EXP PLUS-EXPS ')'	{ fprintf(stderr, "[PLUS<-EXP PLUS-EXPS=%d+%d]\n", $3, $4); $$ = $3 + $4; }
 
@@ -64,34 +79,34 @@ DIVIDE	: '(' '/' EXP EXP ')'	{ $$ = $3 / $4; }
 	;
 MODULUS	: '(' mod EXP EXP ')'	{ $$ = $3 % $4; }
 	;
-GREATER	: '(' '>' EXP EXP ')'
+GREATER	: '(' '>' EXP EXP ')'	{ $$ = ($3 > $4); }
 	;
-SMALLER : '(' '<' EXP EXP ')'
+SMALLER : '(' '<' EXP EXP ')'	{ $$ = ($3 < $4); }
 	;
-EQUAL	: '(' '=' EXP EQUAL-EXPS ')'
+EQUAL	: '(' '=' EXP EQUAL-EXPS ')'	{ fprintf(stderr, "[EQUAL<-EXP EQUAL-EXPS=%d=%d]\n", $3, $4); $$ = num_same && ($3 == $4); num_same = 1;}
 	;
-EQUAL-EXPS	: EXP
-		| EXP EQUAL-EXPS
+EQUAL-EXPS	: EXP			{ $$ = $1; }
+		| EXP EQUAL-EXPS	{ num_same &= ($1 == $2); $$ = $1; }
 		;
-LOGICAL-OP	: AND-OP
-		| OR-OP
-		| NOT-OP
+LOGICAL-OP	: AND-OP	{ $$ = $1; }
+		| OR-OP		{ $$ = $1; }
+		| NOT-OP	{ $$ = $1; }
 		;
-AND-OP	: '(' and EXP AND-EXPS ')'
+AND-OP	: '(' and EXP AND-EXPS ')'	{ $$ = bool_and && ($3 == $4); bool_and = 1;}
 	;
-AND-EXPS: EXP
-	| EXP AND-EXPS
+AND-EXPS: EXP				{ $$ = $1; }
+	| EXP AND-EXPS			{ bool_and &= ($1 == $2); $$ = $1; }
 	;
-OR-OP	: '(' or EXP OR-EXPS ')'
+OR-OP	: '(' or EXP OR-EXPS ')'	{ $$ = bool_or || ($3|$4); bool_or = 0; }
 	;
-OR-EXPS	: EXP
-	| EXP OR-EXPS
+OR-EXPS	: EXP				{ $$ = $1; }
+	| EXP OR-EXPS			{ bool_or |= ($1|$2); $$ = 0; }
 	;
-NOT-OP	: '(' not EXP ')'
+NOT-OP	: '(' not EXP ')'		{ $$ = !$3; }
 	;
-DEF-STMT: '(' define VARIABLE EXP ')'
+DEF-STMT: '(' define VARIABLE EXP ')'	{ strcpy(ids[id_size].id, $3); ids[id_size++].data = (Data){0, $4}; }
 	;
-VARIABLE: id
+VARIABLE: id				{ strcpy($$, $1); }
 	;
 FUN-EXP	: '(' fun FUN-IDs FUN-BODY ')'
 	;
@@ -109,18 +124,18 @@ PARAM	: EXP
 	;
 FUN-NAME: id
 	;
-IF-EXP	: '(' _if TEST-EXP THEN-EXP ELSE-EXP ')'
+IF-EXP	: '(' _if TEST-EXP THEN-EXP ELSE-EXP ')' { $$ = ($3 ? $4 : $5); }	
 	;
-TEST-EXP: EXP
+TEST-EXP: EXP	{ $$ = $1; }
 	;
-THEN-EXP: EXP
+THEN-EXP: EXP	{ $$ = $1; }
 	;
-ELSE-EXP: EXP
+ELSE-EXP: EXP	{ $$ = $1; }
 	;
 
 %%
 void yyerror(const char *message) {
-    fprintf(stderr, "%s\n", message);
+	printf("syntax error\n");
 }
 
 int main(int argc, char * argv[]) {

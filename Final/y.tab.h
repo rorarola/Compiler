@@ -43,6 +43,20 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 9 "A.y"
+
+	typedef struct Data {
+		int type; // 0: number, 1: boolean, 2: function
+		int val;
+	} Data;
+	typedef struct ID {
+		char id[500];
+		Data data;
+	} ID;
+	ID ids[105];
+
+#line 60 "y.tab.h"
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -54,13 +68,13 @@ extern int yydebug;
     or = 260,
     not = 261,
     number = 262,
-    define = 263,
-    fun = 264,
-    _if = 265,
-    id = 266,
-    print_num = 267,
-    print_bool = 268,
-    mod = 269
+    fun = 263,
+    _if = 264,
+    id = 265,
+    print_num = 266,
+    print_bool = 267,
+    mod = 268,
+    define = 269
   };
 #endif
 
@@ -68,12 +82,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 7 "A.y"
+#line 20 "A.y"
 
 	int integer;
-	char* string;
+	char string[500];
+	struct Data data; 
 
-#line 77 "y.tab.h"
+#line 92 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

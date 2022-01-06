@@ -31,15 +31,16 @@ int id_size = 0;
 %type <integer> EXP NUM-OP PLUS PLUS-EXPS MINUS MULTIPLY MULTI-EXPS DIVIDE MODULUS GREATER SMALLER EQUAL EQUAL-EXPS LOGICAL-OP AND-OP AND-EXPS OR-OP OR-EXPS NOT-OP IF-EXP TEST-EXP THEN-EXP ELSE-EXP 
 %%
 PROGRAM	: STMT PROGRAM
-	|
+	|		{ fprintf(stderr, "[blank]\n"); }
 	;
 STMT	: EXP
 	| DEF-STMT
 	| PRINT-STMT
+	|		{ fprintf(stderr, "[blank]\n"); }
 	;
-PRINT-STMT	: print_num EXP		{ printf("%d\n", $2); }
-		| print_bool EXP	{ 
-						if($2 == 0) printf("#f\n");
+PRINT-STMT	: '(' print_num EXP ')'		{ printf("%d\n", $3); }
+		| '(' print_bool EXP ')'	{ 
+						if($3 == 0) printf("#f\n");
 						else printf("#t\n");
 					}
 		;
@@ -92,17 +93,17 @@ LOGICAL-OP	: AND-OP	{ $$ = $1; }
 		| OR-OP		{ $$ = $1; }
 		| NOT-OP	{ $$ = $1; }
 		;
-AND-OP	: '(' and EXP AND-EXPS ')'	{ $$ = bool_and && ($3 == $4); bool_and = 1;}
+AND-OP	: '(' and EXP AND-EXPS ')'	{ $$ = bool_and && $3; bool_and = 1;}
 	;
-AND-EXPS: EXP				{ $$ = $1; }
-	| EXP AND-EXPS			{ bool_and &= ($1 == $2); $$ = $1; }
+AND-EXPS: EXP				{ bool_and &= $1; }
+	| EXP AND-EXPS			
 	;
 OR-OP	: '(' or EXP OR-EXPS ')'	{ $$ = bool_or || ($3|$4); bool_or = 0; }
 	;
 OR-EXPS	: EXP				{ $$ = $1; }
 	| EXP OR-EXPS			{ bool_or |= ($1|$2); $$ = 0; }
 	;
-NOT-OP	: '(' not EXP ')'		{ $$ = !$3; }
+NOT-OP	: '(' not EXP ')'		{ $$ = ($3 == 0); fprintf(stderr, "[NOT-OP=%d]\n", $$); }
 	;
 DEF-STMT: '(' define VARIABLE EXP ')'	{ strcpy(ids[id_size].id, $3); ids[id_size++].data = (Data){0, $4}; }
 	;

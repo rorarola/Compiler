@@ -10,6 +10,8 @@ letter 		[a-z]
 "print-bool"				{ return print_bool; }
 "mod"					{ return mod; }
 "or"					{ return or; }
+"and"					{ return and; }
+"not"					{ return not; }
 "define"				{ return define; }
 "if"					{ return _if; }
 (0|[1-9]{digit}*|-[1-9]{digit}*)	{ yylval.integer = atoi(yytext); return number; }
@@ -19,4 +21,6 @@ letter 		[a-z]
 						return bool_val; 
 					}
 [+*//()<>=-]				{ return *yytext; }
+.
+[\n]
 %%
